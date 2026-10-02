@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0shpqs6" targetNamespace="http://bpmn.io/schema/bpmn" exporter="bpmn-js (https://demo.bpmn.io)" exporterVersion="18.31.0">
+  <bpmn:process id="Process_0ekn2wn" isExecutable="false">
+    <bpmn:startEvent id="StartEvent_0bczgho" name="Ежедневная проверка">
+      <bpmn:outgoing>Flow_12zu9td</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:task id="Activity_0q91vxk" name="Найти просроченные выдачи">
+      <bpmn:incoming>Flow_12zu9td</bpmn:incoming>
+      <bpmn:outgoing>Flow_1ysly5d</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_12zu9td" sourceRef="StartEvent_0bczgho" targetRef="Activity_0q91vxk" />
+    <bpmn:exclusiveGateway id="Gateway_0esklgv">
+      <bpmn:incoming>Flow_1ysly5d</bpmn:incoming>
+      <bpmn:outgoing>Flow_1292uor</bpmn:outgoing>
+      <bpmn:outgoing>Flow_0innk2z</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1ysly5d" sourceRef="Activity_0q91vxk" targetRef="Gateway_0esklgv" />
+    <bpmn:task id="Activity_01v60st" name="Отправить уведомление">
+      <bpmn:incoming>Flow_1292uor</bpmn:incoming>
+      <bpmn:outgoing>Flow_0dr7kjn</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_1292uor" name="Есть задолженности" sourceRef="Gateway_0esklgv" targetRef="Activity_01v60st" />
+    <bpmn:task id="Activity_1gmlnko" name="Записать в журнал">
+      <bpmn:incoming>Flow_0dr7kjn</bpmn:incoming>
+      <bpmn:outgoing>Flow_1qw2aly</bpmn:outgoing>
+    </bpmn:task>
+    <bpmn:sequenceFlow id="Flow_0dr7kjn" sourceRef="Activity_01v60st" targetRef="Activity_1gmlnko" />
+    <bpmn:endEvent id="Event_1m886uf">
+      <bpmn:incoming>Flow_1qw2aly</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1qw2aly" sourceRef="Activity_1gmlnko" targetRef="Event_1m886uf" />
+    <bpmn:endEvent id="Event_18j7irx">
+      <bpmn:incoming>Flow_0innk2z</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_0innk2z" name="Нет задолженностей" sourceRef="Gateway_0esklgv" targetRef="Event_18j7irx" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_0ekn2wn">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_0bczgho">
+        <dc:Bounds x="156" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="142" y="285" width="64" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0q91vxk_di" bpmnElement="Activity_0q91vxk">
+        <dc:Bounds x="250" y="220" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0esklgv_di" bpmnElement="Gateway_0esklgv" isMarkerVisible="true">
+        <dc:Bounds x="415" y="235" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_01v60st_di" bpmnElement="Activity_01v60st">
+        <dc:Bounds x="390" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1gmlnko_di" bpmnElement="Activity_1gmlnko">
+        <dc:Bounds x="540" y="80" width="100" height="80" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1m886uf_di" bpmnElement="Event_1m886uf">
+        <dc:Bounds x="692" y="102" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_18j7irx_di" bpmnElement="Event_18j7irx">
+        <dc:Bounds x="422" y="372" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_12zu9td_di" bpmnElement="Flow_12zu9td">
+        <di:waypoint x="192" y="260" />
+        <di:waypoint x="250" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ysly5d_di" bpmnElement="Flow_1ysly5d">
+        <di:waypoint x="350" y="260" />
+        <di:waypoint x="415" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1292uor_di" bpmnElement="Flow_1292uor">
+        <di:waypoint x="440" y="235" />
+        <di:waypoint x="440" y="160" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="450" y="195.5" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0dr7kjn_di" bpmnElement="Flow_0dr7kjn">
+        <di:waypoint x="490" y="120" />
+        <di:waypoint x="540" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1qw2aly_di" bpmnElement="Flow_1qw2aly">
+        <di:waypoint x="640" y="120" />
+        <di:waypoint x="692" y="120" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0innk2z_di" bpmnElement="Flow_0innk2z">
+        <di:waypoint x="440" y="285" />
+        <di:waypoint x="440" y="372" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="447" y="305.5" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

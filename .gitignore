@@ -1,0 +1,15 @@
+# Временные файлы
+*.tmp
+*.log
+
+# Настройки IDE
+.vscode/
+.idea/
+
+# Файлы операционной системы
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Личные заметки
+notes/
