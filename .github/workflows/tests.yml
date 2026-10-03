@@ -1,0 +1,60 @@
+name: SQL Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: admin123
+          POSTGRES_DB: library
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Клонирование репозитория
+        uses: actions/checkout@v4
+
+      - name: Установка PostgreSQL клиента
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Загрузка схемы базы данных
+        env:
+          PGPASSWORD: admin123
+        run: psql -h localhost -U admin -d library -v ON_ERROR_STOP=1 -f sql/schema.sql
+
+      - name: Загрузка базовых данных
+        env:
+          PGPASSWORD: admin123
+        run: psql -h localhost -U admin -d library -v ON_ERROR_STOP=1 -f sql/seed-data.sql
+
+      - name: Генерация расширенного набора данных
+        env:
+          PGPASSWORD: admin123
+        run: psql -h localhost -U admin -d library -v ON_ERROR_STOP=1 -f sql/generate-data.sql
+
+      - name: Тесты целостности данных
+        env:
+          PGPASSWORD: admin123
+        run: psql -h localhost -U admin -d library -v ON_ERROR_STOP=1 -f tests/test_integrity.sql
+
+      - name: Тесты бизнес-логики
+        env:
+          PGPASSWORD: admin123
+        run: psql -h localhost -U admin -d library -v ON_ERROR_STOP=1 -f tests/test_business_logic.sql
