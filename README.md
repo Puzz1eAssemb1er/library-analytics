@@ -50,6 +50,7 @@ flowchart LR
     style N8N fill:#EA4B71,color:#fff
     style DBEAVER fill:#382B20,color:#fff
     style GH fill:#24292e,color:#fff
+```
 
 ## Структура проекта
 
