@@ -43,6 +43,7 @@ flowchart LR
     style MB fill:#509EE3,color:#fff
     style N8N fill:#EA4B71,color:#fff
     style FW fill:#CC0200,color:#fff
+```
 ## Структура проекта
 
     project/
