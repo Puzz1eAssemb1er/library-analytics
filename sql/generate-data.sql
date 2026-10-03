@@ -21,13 +21,13 @@ FROM (
 ) r;
 
 -- ШАГ 2: Генерируем 500 выдач
+-- CTE MATERIALIZED фиксирует loan_date, чтобы return_date считался от него же
+-- Массивы ID + случайный индекс — разные значения для каждой строки
 
--- ID берутся случайной выборкой из реальных записей — работает при любых пропусках в нумерации
-
-WITH generated_loans AS (
+WITH base AS MATERIALIZED (
     SELECT 
-        (SELECT id FROM books ORDER BY random() LIMIT 1) AS book_id,
-        (SELECT id FROM readers ORDER BY random() LIMIT 1) AS reader_id,
+        (ARRAY(SELECT id FROM books))[1 + floor(random() * (SELECT COUNT(*) FROM books))::INT] AS book_id,
+        (ARRAY(SELECT id FROM readers))[1 + floor(random() * (SELECT COUNT(*) FROM readers))::INT] AS reader_id,
         (CURRENT_DATE - (floor(random() * 95 + 25))::INT)::DATE AS loan_date,
         random() AS return_chance,
         (floor(random() * 20 + 3))::INT AS loan_duration
@@ -43,4 +43,4 @@ SELECT
         THEN loan_date + loan_duration
         ELSE NULL
     END
-FROM generated_loans;
+FROM base;
