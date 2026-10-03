@@ -50,3 +50,59 @@ SELECT
     ROUND(AVG(return_date - loan_date), 1) AS "Средний срок возврата, дней"
 FROM loans
 WHERE return_date IS NOT NULL;
+
+-- 6. Ранжирование читателей внутри сегмента
+-- Демонстрирует оконную функцию RANK() OVER (PARTITION BY ...)
+WITH reader_stats AS (
+    SELECT 
+        r.id,
+        r.last_name || ' ' || r.first_name AS reader_name,
+        COUNT(l.id) AS total_loans,
+        COALESCE(CURRENT_DATE - MAX(l.loan_date), 9999) AS days_since_last_loan
+    FROM readers r
+    LEFT JOIN loans l ON r.id = l.reader_id
+    GROUP BY r.id, r.last_name, r.first_name
+),
+segmented AS (
+    SELECT 
+        reader_name,
+        total_loans,
+        days_since_last_loan,
+        CASE 
+            WHEN days_since_last_loan = 9999 THEN 'Никогда не брал'
+            WHEN days_since_last_loan <= 30 AND total_loans >= 2 THEN 'Активный'
+            WHEN days_since_last_loan <= 60 THEN 'Затухающий'
+            WHEN days_since_last_loan <= 90 THEN 'Спящий'
+            ELSE 'Потерянный'
+        END AS segment
+    FROM reader_stats
+)
+SELECT 
+    segment AS "Сегмент",
+    RANK() OVER (PARTITION BY segment ORDER BY total_loans DESC) AS "Место в сегменте",
+    reader_name AS "Читатель",
+    total_loans AS "Всего выдач",
+    days_since_last_loan AS "Дней с последней выдачи"
+FROM segmented
+ORDER BY segment, total_loans DESC;
+
+-- 7. Динамика выдач по неделям с накопительным итогом
+-- Демонстрирует оконные функции SUM() OVER и AVG() OVER с окном ROWS BETWEEN
+WITH weekly_stats AS (
+    SELECT 
+        DATE_TRUNC('week', loan_date)::DATE AS week_start,
+        COUNT(*) AS loans_in_week
+    FROM loans
+    WHERE loan_date >= CURRENT_DATE - INTERVAL '8 weeks'
+    GROUP BY DATE_TRUNC('week', loan_date)
+)
+SELECT 
+    week_start AS "Начало недели",
+    loans_in_week AS "Выдач за неделю",
+    SUM(loans_in_week) OVER (ORDER BY week_start) AS "Накопительно",
+    ROUND(
+        AVG(loans_in_week) OVER (ORDER BY week_start ROWS BETWEEN 2 PRECEDING AND CURRENT ROW),
+        1
+    ) AS "Скользящее среднее (3 недели)"
+FROM weekly_stats
+ORDER BY week_start;
