@@ -55,32 +55,40 @@ flowchart LR
 ## Структура проекта
 
 project/
-├── README.md
+├── .github/
+│   └── workflows/
+│       └── tests.yml          # GitHub Actions: автозапуск тестов
 ├── bpmn/
-│ ├── issue-book.bpmn # Схема процесса «Выдача книги»
-│ ├── issue-book.svg
-│ ├── debt-process.bpmn # Схема процесса «Работа с задолженностями»
-│ └── debt-process.svg
+│   ├── issue-book.bpmn        # Схема процесса «Выдача книги»
+│   ├── issue-book.svg
+│   ├── debt-process.bpmn      # Схема процесса «Работа с задолженностями»
+│   └── debt-process.svg
+├── screenshots/
+│   ├── dashboard-metabase.png # Дашборд Metabase
+│   ├── workflow-n8n.png       # Workflow в n8n
+│   └── bpmn-debt.png          # Схема BPMN
 ├── sql/
 │   ├── schema.sql             # Схема базы данных
 │   ├── seed-data.sql          # Базовые тестовые данные
 │   ├── generate-data.sql      # Генератор расширенного набора (100+ читателей, 500+ выдач)
-│   └── analytics.sql          # Аналитические запросы
-└── screenshots/
-├── dashboard-metabase.png # Дашборд Metabase
-├── workflow-n8n.png # Workflow в n8n
-└── bpmn-debt.png # Схема BPMN
+│   └── analytics.sql          # Аналитические запросы (7 отчётов)
+├── tests/
+│   ├── run-tests.ps1          # Скрипт запуска тестов
+│   ├── test_integrity.sql     # Тесты целостности данных
+│   └── test_business_logic.sql # Тесты бизнес-логики
+└── README.md
 
 
 ## Модель данных
 
-База данных состоит из четырёх связанных таблиц:
+База данных состоит из шести связанных таблиц:
 
 - **authors** — авторы книг
 - **books** — книги (связаны с авторами)
 - **readers** — читатели библиотеки
 - **loans** — выдачи книг (связывают читателей и книги)
 - **notifications_log** — журнал отправленных уведомлений
+- **error_log** — журнал ошибок workflow в n8n
 
 Объём данных в учебной базе: более 100 читателей, 500 выдач за последние 4 месяца. Такой набор позволяет строить осмысленную RFM-сегментацию, анализировать распределение просрочек и проверять аналитические запросы на реалистичных объёмах.
 
