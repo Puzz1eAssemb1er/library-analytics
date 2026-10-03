@@ -13,13 +13,20 @@ SELECT
     'reader' || (100 + gs) || '@example.com'
 FROM generate_series(1, 100) AS gs;
 
--- ШАГ 2: Генерируем 500 выдач
--- Сначала фиксируем loan_date, потом на его основе считаем return_date
+-- -- ШАГ 2: Генерируем 500 выдач
+-- ID книг и читателей вычисляются от реальных MIN/COUNT, а не хардкодятся
+-- Это делает скрипт независимым от того, сколько строк было до него
 
-WITH generated_loans AS (
+WITH reader_range AS (
+    SELECT MIN(id) AS min_id, COUNT(*) AS cnt FROM readers
+),
+book_range AS (
+    SELECT MIN(id) AS min_id, COUNT(*) AS cnt FROM books
+),
+generated_loans AS (
     SELECT 
-        floor(random() * 8 + 1)::INT AS book_id,
-        floor(random() * 100 + 8)::INT AS reader_id,
+        ((SELECT min_id FROM book_range) + floor(random() * (SELECT cnt FROM book_range)))::INT AS book_id,
+        ((SELECT min_id FROM reader_range) + floor(random() * (SELECT cnt FROM reader_range)))::INT AS reader_id,
         (CURRENT_DATE - (floor(random() * 95 + 25))::INT)::DATE AS loan_date,
         random() AS return_chance,
         (floor(random() * 20 + 3))::INT AS loan_duration
