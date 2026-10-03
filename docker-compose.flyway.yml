@@ -1,0 +1,13 @@
+services:
+  flyway:
+    image: flyway/flyway:10
+    container_name: flyway_migrations
+    command: -url=jdbc:postgresql://sql_postgres:5432/library -user=admin -password=admin123 -connectRetries=10 migrate
+    volumes:
+      - ./migrations:/flyway/sql
+    networks:
+      - sql-project_default
+
+networks:
+  sql-project_default:
+    external: true
