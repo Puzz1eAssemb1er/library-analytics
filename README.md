@@ -23,6 +23,34 @@
 | Автоматизация | n8n | Оркестрация, сценарии |
 | Контейнеризация | Docker Desktop | Развёртывание всех сервисов |
 
+## Архитектура
+
+```mermaid
+flowchart LR
+    subgraph Docker["Docker network: sql-project_default"]
+        PG[(PostgreSQL<br/>library<br/>5 таблиц)]
+        MB[Metabase<br/>:3000]
+        N8N[n8n<br/>:5678]
+    end
+    
+    DBEAVER[DBeaver<br/>SQL-клиент] -->|SQL| PG
+    MB -->|чтение данных| PG
+    N8N -->|SQL-запрос| PG
+    N8N -->|запись в журнал| PG
+    N8N -->|отправка уведомлений| LOG[(notifications_log)]
+    LOG --- PG
+    
+    USER1[Аналитик] -->|браузер| MB
+    USER2[Администратор] -->|браузер| N8N
+    
+    GH[GitHub Actions<br/>CI: тесты] -.->|проверка| PG
+    
+    style PG fill:#336791,color:#fff
+    style MB fill:#509EE3,color:#fff
+    style N8N fill:#EA4B71,color:#fff
+    style DBEAVER fill:#382B20,color:#fff
+    style GH fill:#24292e,color:#fff
+
 ## Структура проекта
 
 project/
