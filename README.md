@@ -17,67 +17,59 @@
 | Область | Инструмент | Роль в проекте |
 |---|---|---|
 | СУБД | PostgreSQL 16 | Хранилище данных |
+| Миграции | Flyway | Версионирование схемы БД |
 | SQL-клиент | DBeaver | Написание запросов, администрирование |
 | BI | Metabase | Дашборды, визуализация |
 | BPMN | bpmn.io | Моделирование бизнес-процессов |
 | Автоматизация | n8n | Оркестрация, сценарии |
 | Контейнеризация | Docker Desktop | Развёртывание всех сервисов |
-
+| CI | GitHub Actions | Автозапуск тестов |
 ## Архитектура
 
 ```mermaid
 flowchart LR
-    subgraph Docker["Docker network: sql-project_default"]
-        PG[(PostgreSQL<br/>library<br/>5 таблиц)]
-        MB[Metabase<br/>:3000]
-        N8N[n8n<br/>:5678]
+    subgraph Docker["Docker network"]
+        PG[(PostgreSQL library)]
+        MB[Metabase :3000]
+        N8N[n8n :5678]
+        FW[Flyway migrations]
     end
-    
-    DBEAVER[DBeaver<br/>SQL-клиент] -->|SQL| PG
-    MB -->|чтение данных| PG
-    N8N -->|SQL-запрос| PG
-    N8N -->|запись в журнал| PG
-    N8N -->|отправка уведомлений| LOG[(notifications_log)]
-    LOG --- PG
-    
-    USER1[Аналитик] -->|браузер| MB
-    USER2[Администратор] -->|браузер| N8N
-    
-    GH[GitHub Actions<br/>CI: тесты] -.->|проверка| PG
-    
+    DBEAVER[DBeaver] -->|SQL| PG
+    MB -->|read| PG
+    N8N -->|SQL| PG
+    FW -->|migrations| PG
+    GH[GitHub Actions CI] -.->|tests| PG
     style PG fill:#336791,color:#fff
     style MB fill:#509EE3,color:#fff
     style N8N fill:#EA4B71,color:#fff
-    style DBEAVER fill:#382B20,color:#fff
-    style GH fill:#24292e,color:#fff
-```
-
+    style FW fill:#CC0200,color:#fff
 ## Структура проекта
 
-project/
-├── .github/
-│   └── workflows/
-│       └── tests.yml          # GitHub Actions: автозапуск тестов
-├── bpmn/
-│   ├── issue-book.bpmn        # Схема процесса «Выдача книги»
-│   ├── issue-book.svg
-│   ├── debt-process.bpmn      # Схема процесса «Работа с задолженностями»
-│   └── debt-process.svg
-├── screenshots/
-│   ├── dashboard-metabase.png # Дашборд Metabase
-│   ├── workflow-n8n.png       # Workflow в n8n
-│   └── bpmn-debt.png          # Схема BPMN
-├── sql/
-│   ├── schema.sql             # Схема базы данных
-│   ├── seed-data.sql          # Базовые тестовые данные
-│   ├── generate-data.sql      # Генератор расширенного набора (100+ читателей, 500+ выдач)
-│   └── analytics.sql          # Аналитические запросы (7 отчётов)
-├── tests/
-│   ├── run-tests.ps1          # Скрипт запуска тестов
-│   ├── test_integrity.sql     # Тесты целостности данных
-│   └── test_business_logic.sql # Тесты бизнес-логики
-└── README.md
-
+    project/
+    ├── .github/workflows/tests.yml
+    ├── bpmn/
+    │   ├── issue-book.bpmn
+    │   ├── debt-process.bpmn
+    │   └── debt-process.svg
+    ├── migrations/
+    │   ├── V1__create_tables.sql
+    │   ├── V2__add_indexes.sql
+    │   └── V3__add_logs.sql
+    ├── screenshots/
+    │   ├── dashboard-metabase.png
+    │   ├── workflow-n8n.png
+    │   └── bpmn-debt.png
+    ├── sql/
+    │   ├── schema.sql
+    │   ├── seed-data.sql
+    │   ├── generate-data.sql
+    │   └── analytics.sql
+    ├── tests/
+    │   ├── run-tests.ps1
+    │   ├── test_integrity.sql
+    │   └── test_business_logic.sql
+    ├── docker-compose.flyway.yml
+    └── README.md
 
 ## Модель данных
 
@@ -90,7 +82,7 @@ project/
 - **notifications_log** — журнал отправленных уведомлений
 - **error_log** — журнал ошибок workflow в n8n
 
-Объём данных в учебной базе: более 100 читателей, 500 выдач за последние 4 месяца. Такой набор позволяет строить осмысленную RFM-сегментацию, анализировать распределение просрочек и проверять аналитические запросы на реалистичных объёмах.
+Объём данных в учебной базе: более 100 читателей, 500 выдач за последние 4 месяца.
 
 ## Аналитика
 
@@ -101,12 +93,20 @@ project/
 3. **Просроченные выдачи** — список невозвращённых книг с указанием дней просрочки
 4. **RFM-сегментация читателей** — разделение читателей на группы по давности последней выдачи
 5. **Прогноз задолженностей по книгам** — средний срок возврата и процент просрочек по каждой книге
-6. **Ранжирование читателей в сегментах** — топ читателей в каждой RFM-группе (оконная функция `RANK() OVER`)
-7. **Динамика выдач по неделям** — недельный тренд с накопительным итогом и скользящим средним (оконные функции `SUM() OVER`, `AVG() OVER`)
+6. **Ранжирование читателей в сегментах** — топ читателей в каждой RFM-группе (оконная функция RANK() OVER)
+7. **Динамика выдач по неделям** — недельный тренд с накопительным итогом и скользящим средним (оконные функции SUM() OVER, AVG() OVER)
 
 Все отчёты собраны на одном дашборде **«Библиотека: аналитика»**.
 
 ![Дашборд Metabase](screenshots/dashboard-metabase.png)
+## Бизнес-процессы (BPMN)
+
+Смоделированы два процесса:
+
+1. **Выдача книги** — от запроса читателя до выдачи или отказа
+2. **Работа с задолженностями** — ежедневная проверка просрочек, отправка уведомлений, запись в журнал
+
+![Схема процесса работы с задолженностями](screenshots/bpmn-debt.png)
 
 ## Автоматизация
 
@@ -114,33 +114,44 @@ project/
 
 1. Запускается по расписанию (раз в сутки в полночь)
 2. Выполняет SQL-запрос к PostgreSQL, находя просроченные выдачи
-3. Записывает каждую просрочку в таблицу `notifications_log` с текстом уведомления
+3. Записывает каждую просрочку в таблицу notifications_log с текстом уведомления
 
 **Обработка ошибок.** Workflow имеет две ветки выполнения:
 
-- **Success** — если SQL-запрос выполнился, информация о просрочках пишется в `notifications_log`
-- **Error** — если запрос упал (например, БД недоступна), текст ошибки сохраняется в таблицу `error_log`
+- **Success** — если SQL-запрос выполнился, информация о просрочках пишется в notifications_log
+- **Error** — если запрос упал, текст ошибки сохраняется в таблицу error_log
 
-Для узла «Найти просроченные выдачи» включён режим `Retry On Fail` (3 попытки с паузой 1 секунда). Это защищает от временных сбоев сети.
-
-Workflow опубликован и работает в автоматическом режиме.
+Для узла «Найти просроченные выдачи» включён режим Retry On Fail (3 попытки с паузой 1 секунда).
 
 ![Workflow в n8n](screenshots/workflow-n8n.png)
 
 ## Развёртывание
 
-Все сервисы работают в Docker. Для запуска проекта необходимы:
+Все сервисы работают в Docker:
 
 - Docker Desktop
-- PostgreSQL (контейнер `sql_postgres`)
-- Metabase (контейнер `metabase_app`)
-- n8n (контейнер `n8n_app`)
+- PostgreSQL (контейнер sql_postgres)
+- Metabase (контейнер metabase_app)
+- n8n (контейнер n8n_app)
+
+### Управление схемой БД
+
+Схема базы данных управляется через Flyway. Все изменения структуры оформляются отдельными миграциями в папке migrations/:
+
+- V1__create_tables.sql — базовые таблицы
+- V2__add_indexes.sql — индексы для внешних ключей
+- V3__add_logs.sql — таблицы логирования
+
+Применить миграции:
+
+    docker compose -f docker-compose.flyway.yml up
 
 ### Порядок запуска
 
-1. PostgreSQL: `docker compose up -d` в папке `Z:\sql-project`
-2. Metabase: `docker compose up -d` в папке `Z:\metabase`
-3. n8n: `docker compose up -d` в папке `Z:\n8n`
+1. PostgreSQL: docker compose up -d в папке Z:\sql-project
+2. Миграции: docker compose -f docker-compose.flyway.yml up в папке Z:\project
+3. Metabase: docker compose up -d в папке Z:\metabase
+4. n8n: docker compose up -d в папке Z:\n8n
 
 ### Доступ к сервисам
 
@@ -154,20 +165,30 @@ Workflow опубликован и работает в автоматическ�
 
 В проекте реализованы SQL-тесты двух типов:
 
-- **Тесты целостности данных** (`tests/test_integrity.sql`) — проверяют, что в базе нет «осиротевших» записей, даты корректны, а email уникальны
-- **Тесты бизнес-логики** (`tests/test_business_logic.sql`) — проверяют, что аналитические запросы возвращают ожидаемые результаты: RFM-сегментация покрывает всех читателей, расчёт просрочки не даёт отрицательных значений, отчёты включают все записи
+- **Тесты целостности данных** (tests/test_integrity.sql) — проверяют, что в базе нет «осиротевших» записей, даты корректны, а email уникальны
+- **Тесты бизнес-логики** (tests/test_business_logic.sql) — проверяют, что аналитические запросы возвращают ожидаемые результаты
 
 Запуск всех тестов одной командой:
 
-```powershell
-powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
+    powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
+
+### Покрытие
+
+| Файл | Тестов | Что проверяет |
+|---|---|---|
+| test_integrity.sql | 4 | Целостность связей, даты, уникальность email |
+| test_business_logic.sql | 5 | RFM-сегментация, просрочки, полнота отчётов |
+
+Все 9 тестов проходят успешно.
 
 ## Навыки, продемонстрированные в проекте
 
 - Проектирование реляционных баз данных с нормализацией и связями
-- Написание SQL-запросов: JOIN, LEFT JOIN, GROUP BY, агрегатные функции, работа с датами
+- Управление схемой БД через миграции (Flyway)
+- Написание SQL-запросов: JOIN, LEFT JOIN, GROUP BY, оконные функции, агрегация, работа с датами
 - Создание индексов и оптимизация запросов
 - Построение аналитических дашбордов в BI-инструменте
 - Моделирование бизнес-процессов в нотации BPMN 2.0
-- Автоматизация процессов с интеграцией БД и оркестрацией
+- Автоматизация процессов с интеграцией БД и обработкой ошибок
 - Развёртывание сервисов через Docker Compose
+- Написание SQL-тестов и настройка CI через GitHub Actions
