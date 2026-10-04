@@ -2,7 +2,7 @@
 
 [![SQL Tests](https://github.com/Puzz1eAssemb1er/library-analytics/actions/workflows/tests.yml/badge.svg)](https://github.com/Puzz1eAssemb1er/library-analytics/actions/workflows/tests.yml)
 
-Учебный проект, демонстрирующий полный цикл работы с данными: от проектирования базы данных до аналитики, моделирования процессов и автоматизации.
+Пет - проект, демонстрирующий полный цикл работы с данными: от проектирования базы данных до аналитики, моделирования процессов и автоматизации.
 
 ## О проекте
 
