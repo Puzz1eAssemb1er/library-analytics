@@ -106,10 +106,10 @@ flowchart LR
 
 1. **Выдача книги** — от запроса читателя до выдачи или отказа
 
-<img src="bpmn/issue-book.svg" alt="Схема процесса «Выдача книги»" width="700">
+<img src="screenshots/bpmn-issue-book.png" alt="Схема процесса «Выдача книги»" width="600">
 2. **Работа с задолженностями** — ежедневная проверка просрочек, отправка уведомлений, запись в журнал
 
-<img src="screenshots/bpmn-debt.png" alt="Схема процесса работы с задолженностями" width="700">
+<img src="screenshots/bpmn-debt-process.png" alt="Схема процесса работы с задолженностями" width="600">
 
 ## Автоматизация
 
